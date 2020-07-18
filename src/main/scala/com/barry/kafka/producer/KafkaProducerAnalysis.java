@@ -1,5 +1,8 @@
 package com.barry.kafka.producer;
 
+import com.barry.kafka.bean.Company;
+import com.barry.kafka.partitioner.DemoPartitioner;
+import com.barry.kafka.serializer.CompanySerializer;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -34,6 +37,11 @@ public class KafkaProducerAnalysis {
     }
 
     public static void main(String[] args) {
+//        commonStringSend();
+        defineSerSend();
+    }
+
+    private static void commonStringSend() {
         Properties prop = initConf();
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "Hello,Kafka");
@@ -46,7 +54,6 @@ public class KafkaProducerAnalysis {
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace();
         }
-
 
         /****************************async*********************************************/
         try {
@@ -68,7 +75,24 @@ public class KafkaProducerAnalysis {
         }
 
         producer.close(Duration.ofSeconds(1, 100));
+    }
 
+    private static void defineSerSend(){
+        Properties properties = new Properties();
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CompanySerializer.class.getName());
+        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, DemoPartitioner.class.getName());
+
+        KafkaProducer<String, Company> producer = new KafkaProducer<>(properties);
+        Company company = Company.builder().name("earlydata").address("xinhuiroad468").build();
+        ProducerRecord<String, Company> record = new ProducerRecord<>(topic, company);
+        try {
+            producer.send(record).get();
+        } catch (InterruptedException|ExecutionException e) {
+            e.printStackTrace();
+        }
+        producer.close();
     }
 
 }
