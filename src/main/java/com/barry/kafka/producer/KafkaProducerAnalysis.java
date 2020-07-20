@@ -40,9 +40,9 @@ public class KafkaProducerAnalysis {
 
     public static void main(String[] args) {
 //        commonStringSend();
-//        defineSerSend();
+        defineSerSend();
 //        definePartitionSend();
-        defineInterceptorSend();
+//        defineInterceptorSend();
     }
 
     private static void commonStringSend() {
@@ -89,12 +89,14 @@ public class KafkaProducerAnalysis {
 
         KafkaProducer<String, Company> producer = new KafkaProducer<>(properties);
         Company company = Company.builder().name("earlydata").address("xinhuiroad468").build();
-        ProducerRecord<String, Company> record = new ProducerRecord<>(topic, company);
+        ProducerRecord<String, Company> record = new ProducerRecord<>(topic,"company" ,company);
         try {
-            producer.send(record).get();
+            RecordMetadata metadata =  producer.send(record).get();
+            System.out.println(metadata.topic() + " - " + metadata.partition() + " - " + metadata.offset());
         } catch (InterruptedException|ExecutionException e) {
             e.printStackTrace();
         }
+
         producer.close();
     }
 

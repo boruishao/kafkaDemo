@@ -54,7 +54,8 @@ public class CompanySerializer implements Serializer<Company> {
 
     @Override
     public byte[] serialize(String topic, Headers headers, Company data) {
-        return new byte[0];
+        return serialize(topic,data);
+
     }
 
     @Override
