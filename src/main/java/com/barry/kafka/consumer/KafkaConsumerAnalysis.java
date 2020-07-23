@@ -280,7 +280,12 @@ public class KafkaConsumerAnalysis {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            consumer.close();
+            try{
+                //最后把关
+                consumer.commitSync();
+            }finally {
+                consumer.close();
+            }
         }
     }
 
