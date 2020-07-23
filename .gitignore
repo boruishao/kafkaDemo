@@ -8,4 +8,4 @@
 out
 gen
 src/test
-targetconsumer/
+target/

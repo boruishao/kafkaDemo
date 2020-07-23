@@ -38,11 +38,15 @@ public class KafkaProducerAnalysis {
         return properties;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 //        commonStringSend();
-        defineSerSend();
-//        definePartitionSend();
+        while (true) {
+            Thread.sleep(1000);
+//            defineSerSend();
+            definePartitionSend();
 //        defineInterceptorSend();
+        }
+
     }
 
     private static void commonStringSend() {
@@ -81,7 +85,7 @@ public class KafkaProducerAnalysis {
         producer.close(Duration.ofSeconds(1, 100));
     }
 
-    private static void defineSerSend(){
+    private static void defineSerSend() {
         Properties properties = new Properties();
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -89,18 +93,18 @@ public class KafkaProducerAnalysis {
 
         KafkaProducer<String, Company> producer = new KafkaProducer<>(properties);
         Company company = Company.builder().name("earlydata").address("xinhuiroad468").build();
-        ProducerRecord<String, Company> record = new ProducerRecord<>(topic,"company" ,company);
+        ProducerRecord<String, Company> record = new ProducerRecord<>(topic, "company", company);
         try {
-            RecordMetadata metadata =  producer.send(record).get();
+            RecordMetadata metadata = producer.send(record).get();
             System.out.println(metadata.topic() + " - " + metadata.partition() + " - " + metadata.offset());
-        } catch (InterruptedException|ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
         producer.close();
     }
 
-    private static void definePartitionSend(){
+    private static void definePartitionSend() {
         Properties prop = initConf();
         prop.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, DemoPartitioner.class.getName());
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
@@ -118,7 +122,7 @@ public class KafkaProducerAnalysis {
     /**
      * 拦截器的执行顺序，按照配置中的先后顺序执行
      */
-    private static void defineInterceptorSend(){
+    private static void defineInterceptorSend() {
         Properties prop = initConf();
         prop.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
                 ProducerPrefixInterceptor.class.getName() + "," +
