@@ -7,6 +7,7 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,7 +43,21 @@ public class KafkaConsumerAnalysis {
 //        assignPartition();
 //        deserializeRec();
 //        assignCommitted();
-        manuallyCommitRec();
+//        manuallyCommitRec();
+//        pointOffsetRec(1000L,null, null);
+//        pointOffsetRec(null,"begin",null);
+        /* n 天前 */
+        int n = 4;
+        pointOffsetRec(null, null,
+                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
+
+    }
+
+    private static void normalRec() {
+        Properties properties = initConf();
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        consumer.subscribe(Arrays.asList(topic));
+        receiveByPartition(consumer);
     }
 
     /**
@@ -54,37 +69,6 @@ public class KafkaConsumerAnalysis {
         KafkaConsumer<String, Company> consumer = new KafkaConsumer<>(properties);
         consumer.subscribe(Pattern.compile("PAR.*"));
         receiveCompany(consumer);
-    }
-
-    /**
-     * 通过自定义序列化器
-     *
-     * @param consumer
-     */
-    private static void receiveCompany(KafkaConsumer<String, Company> consumer) {
-        try {
-            while (isRunning.get()) {
-                ConsumerRecords<String, Company> records = consumer.poll(Duration.ofMillis(1000));
-                for (ConsumerRecord<String, Company> record : records) {
-                    System.out.println("topic is " + record.topic() + ", partition is " +
-                            record.partition() + ", offset is " + record.offset());
-
-                    System.out.println("key is " + record.key() + ", value is " + record.value());
-                    //todo
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            consumer.close();
-        }
-    }
-
-    private static void normalRec() {
-        Properties properties = initConf();
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
-        consumer.subscribe(Arrays.asList(topic));
-        receiveByPartition(consumer);
     }
 
     private static void manuallyCommitRec() {
@@ -139,13 +123,33 @@ public class KafkaConsumerAnalysis {
 
     }
 
-    private static void receive(KafkaConsumer<String, String> consumer) {
+    /**
+     * 从指定的offset 开始消费数据
+     */
+    private static void pointOffsetRec(Long offset, String beginOrEnd, Long timeStamp) {
+        Properties properties = initConf();
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        consumer.subscribe(Arrays.asList(topic));
+        ControlOffset controlOffset = new ControlOffset();
+        if (offset != null) {
+            controlOffset.seekPointOffset(consumer, offset);
+        } else if (beginOrEnd != null) {
+            controlOffset.seekToBeginOrEnd(consumer, beginOrEnd);
+        } else if (timeStamp != null) {
+            controlOffset.seekToTimeStamp(consumer, timeStamp);
+        }
+
+    }
+
+    /*------------------------------------------------------------*/
+    public static void receive(KafkaConsumer<String, String> consumer) {
         try {
             while (isRunning.get()) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(3000));
                 for (ConsumerRecord<String, String> record : records) {
                     System.out.println("topic is " + record.topic() + ", partition is " +
-                            record.partition() + ", offset is " + record.offset());
+                            record.partition() + ", offset is " + record.offset() +
+                            ", time is " + new Timestamp(record.timestamp()));
 
                     System.out.println("key is " + record.key() + ", value is " + record.value());
                     //todo
@@ -280,14 +284,47 @@ public class KafkaConsumerAnalysis {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try{
+            try {
                 //最后把关
                 consumer.commitSync();
-            }finally {
+            } finally {
+                /**  一些关闭操作
+                 //停止消费者，唯一一个线程安全的方法
+                 consumer.wakeup();
+                 //暂停某个分区的消费
+                 consumer.pause((Arrays.asList(new TopicPartition(topic,0))));
+                 //恢复暂停的某个分区
+                 consumer.resume((Arrays.asList(new TopicPartition(topic,0))));
+                 //查看当前被暂停的分区
+                 consumer.paused();
+                 */
+                //关闭消费者，并回收资源 默认超时时间30秒 也可指定
                 consumer.close();
             }
         }
     }
 
+    /**
+     * 通过自定义序列化器
+     *
+     * @param consumer
+     */
+    private static void receiveCompany(KafkaConsumer<String, Company> consumer) {
+        try {
+            while (isRunning.get()) {
+                ConsumerRecords<String, Company> records = consumer.poll(Duration.ofMillis(1000));
+                for (ConsumerRecord<String, Company> record : records) {
+                    System.out.println("topic is " + record.topic() + ", partition is " +
+                            record.partition() + ", offset is " + record.offset());
 
+                    System.out.println("key is " + record.key() + ", value is " + record.value());
+                    //todo
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            consumer.close();
+        }
+    }
 }
