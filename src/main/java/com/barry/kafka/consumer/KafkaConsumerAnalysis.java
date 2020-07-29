@@ -1,6 +1,7 @@
 package com.barry.kafka.consumer;
 
 import com.barry.kafka.bean.Company;
+import com.barry.kafka.rebalancelistener.SyncCommitRebalanceListener;
 import com.barry.kafka.serializer.CompanyDeserialier;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.PartitionInfo;
@@ -47,10 +48,11 @@ public class KafkaConsumerAnalysis {
 //        pointOffsetRec(1000L,null, null);
 //        pointOffsetRec(null,"begin",null);
         /* n 天前 */
-        int n = 4;
-        pointOffsetRec(null, null,
-                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
+//        int n = 4;
+//        pointOffsetRec(null, null,
+//                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
 
+        receiveWithRebalanceListener();
     }
 
     private static void normalRec() {
@@ -71,6 +73,9 @@ public class KafkaConsumerAnalysis {
         receiveCompany(consumer);
     }
 
+    /**
+     * 手动提交位移
+     */
     private static void manuallyCommitRec() {
         Properties conf = initConf();
         conf.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
@@ -137,6 +142,56 @@ public class KafkaConsumerAnalysis {
             controlOffset.seekToBeginOrEnd(consumer, beginOrEnd);
         } else if (timeStamp != null) {
             controlOffset.seekToTimeStamp(consumer, timeStamp);
+        }
+
+    }
+
+    /**
+     * 带有重均衡器的消费
+     */
+    private static void receiveWithRebalanceListener() {
+        Properties properties = initConf();
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        //用于记录当前已经消费过的位移，在均衡的时候预防重复消费
+        Map<TopicPartition, OffsetAndMetadata> currentOffset = new HashMap<>();
+        consumer.subscribe(Arrays.asList(topic), new ConsumerRebalanceListener() {
+            @Override
+            public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+                consumer.commitSync(currentOffset);
+                currentOffset.clear();
+            }
+
+            @Override
+            public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                //do nothing
+            }
+        });
+
+        try {
+            while (isRunning.get()) {
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(3000));
+                for (ConsumerRecord<String, String> record : records) {
+                    System.out.println("topic is " + record.topic() + ", partition is " +
+                            record.partition() + ", offset is " + record.offset() +
+                            ", time is " + new Timestamp(record.timestamp()));
+
+                    System.out.println("key is " + record.key() + ", value is " + record.value());
+
+                    currentOffset.put(
+                            new TopicPartition(record.topic(), record.partition()),
+                            new OffsetAndMetadata(record.offset() + 1)
+                    );
+
+                    Thread.sleep(500);
+                }
+                consumer.commitSync();
+                System.out.println("this time fetch record: " + records.count());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            consumer.close();
         }
 
     }
@@ -217,9 +272,10 @@ public class KafkaConsumerAnalysis {
                         Thread.sleep(500);
                     }
                     long lastConsumedOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
-                    consumer.commitSync();
-                    Collections.singletonMap(partition,
-                            new OffsetAndMetadata(lastConsumedOffset + 1));
+                    consumer.commitSync(Collections.singletonMap(partition,
+                            new OffsetAndMetadata(lastConsumedOffset + 1)
+                            )
+                    );
                 }
 //                /***************************异步第一种 ************************************************/
 //                consumer.commitAsync((offsets, exception) -> {
