@@ -39,46 +39,51 @@ public class KafkaProducerAnalysis {
     }
 
     public static void main(String[] args) throws Exception {
-//        commonStringSend();
+
         while (true) {
             Thread.sleep(1000);
+            commonStringSend();
 //            defineSerSend();
-            definePartitionSend();
+//            definePartitionSend();
 //        defineInterceptorSend();
         }
 
     }
 
+    /**
+     * 同步和异步发送
+     */
     private static void commonStringSend() {
         Properties prop = initConf();
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "Hello,Kafka");
+        ProducerRecord<String, String> ttlRecord =
+                new ProducerRecord<>(topic, 0, System.currentTimeMillis() - 1000, null, "Hello,ttl Kafka");
 
         /****************************sync*********************************************/
         try {
-            Future<RecordMetadata> future = producer.send(record);
+            Future<RecordMetadata> future = producer.send(ttlRecord);
+            //设置超时时间
             RecordMetadata metadata = future.get(1L, TimeUnit.SECONDS);
-            System.out.println(metadata.topic() + " - " + metadata.partition() + " - " + metadata.offset());
+            System.out.println("sync : " + metadata.topic() + " - " + metadata.partition() + " - " + metadata.offset());
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace();
         }
 
         /****************************async*********************************************/
         try {
-            Future<RecordMetadata> future = producer.send(record,
+              producer.send(record,
                     (RecordMetadata metadata, Exception e) -> {
-                        if (e == null) {
+                        if (e != null) {
                             e.printStackTrace();
                         } else {
-                            System.out.println(metadata.topic() + " - " +
+                            System.out.println("Async : " + metadata.topic() + " - " +
                                     metadata.partition() + " - " + metadata.offset());
 
                         }
                     }
             );
-            RecordMetadata metadata = future.get(1L, TimeUnit.SECONDS);
-            System.out.println(metadata.topic() + " - " + metadata.partition() + " - " + metadata.offset());
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

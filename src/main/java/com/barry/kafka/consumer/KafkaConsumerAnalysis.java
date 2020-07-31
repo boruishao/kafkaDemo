@@ -1,7 +1,7 @@
 package com.barry.kafka.consumer;
 
 import com.barry.kafka.bean.Company;
-import com.barry.kafka.rebalancelistener.SyncCommitRebalanceListener;
+import com.barry.kafka.interceptor.ConsumerTtlInterceptor;
 import com.barry.kafka.serializer.CompanyDeserialier;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.PartitionInfo;
@@ -51,8 +51,9 @@ public class KafkaConsumerAnalysis {
 //        int n = 4;
 //        pointOffsetRec(null, null,
 //                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
+//        receiveWithRebalanceListener();
 
-        receiveWithRebalanceListener();
+        receWithInterceptor();
     }
 
     private static void normalRec() {
@@ -194,6 +195,17 @@ public class KafkaConsumerAnalysis {
             consumer.close();
         }
 
+    }
+
+    /**
+     * 带有拦截器的消费者
+     */
+    private static void receWithInterceptor(){
+        Properties properties = initConf();
+        properties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, ConsumerTtlInterceptor.class.getName());
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        consumer.subscribe(Arrays.asList(topic));
+        receive(consumer);
     }
 
     /*------------------------------------------------------------*/
