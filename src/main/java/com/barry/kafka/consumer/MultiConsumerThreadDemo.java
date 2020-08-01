@@ -1,17 +1,13 @@
 package com.barry.kafka.consumer;
 
 import lombok.SneakyThrows;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 import sun.nio.ch.ThreadPool;
 
 import java.sql.Timestamp;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -25,15 +21,25 @@ import java.util.concurrent.TimeUnit;
  * 但这种方式对于提交位移和消费顺序的处理极为复杂，顾不推荐。
  **/
 
-public class FirstMtiConsumerThreadDemo {
+public class MultiConsumerThreadDemo {
+
+    private static Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
 
     public static void main(String[] args) {
         Properties props = KafkaConsumerAnalysis.initConf();
+
+        /*******************方式1 多线程开多个消费者，每个消费者单线程工作，提交位移自动***************************/
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         int consumerThreadNum = 2;
         for (int i = 0; i < consumerThreadNum; i++) {
-            new KafkaConsumerThread2(props, KafkaConsumerAnalysis.topic,2).start();
+            new KafkaConsumerThread(props, KafkaConsumerAnalysis.topic).start();
         }
+        /*******************方式2 多线程开多个消费者，每个消费者单线程工作，提交位移手动***************************/
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        for (int i = 0; i < consumerThreadNum; i++) {
+            new KafkaConsumerThread2(props, KafkaConsumerAnalysis.topic, 2).start();
+        }
+
     }
 
     /**
@@ -78,6 +84,11 @@ public class FirstMtiConsumerThreadDemo {
                     ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofMillis(1000));
                     if (!records.isEmpty()) {
                         executorService.submit(new RecordHandler(records));
+                        synchronized (offsets) {
+                            if (!offsets.isEmpty()) {
+                                kafkaConsumer.commitSync(offsets);
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -89,8 +100,11 @@ public class FirstMtiConsumerThreadDemo {
         }
     }
 
-    public static class RecordHandler extends Thread{
-        public final ConsumerRecords<String,String> records;
+    /**
+     * 这里采用的手动提交位移的形式，需要一个公共变量offsets，并且在适当的位置需要加锁。
+     */
+    public static class RecordHandler extends Thread {
+        public final ConsumerRecords<String, String> records;
 
         public RecordHandler(ConsumerRecords<String, String> records) {
             this.records = records;
@@ -99,18 +113,33 @@ public class FirstMtiConsumerThreadDemo {
         @SneakyThrows
         @Override
         public void run() {
-            for (ConsumerRecord<String, String> record : records) {
-                System.out.println("topic is " + record.topic() + ", partition is " +
-                        record.partition() + ", offset is " + record.offset() +
-                        ", time is " + new Timestamp(record.timestamp()));
+            for (TopicPartition tp : records.partitions()) {
+                List<ConsumerRecord<String, String>> tpRecords = this.records.records(tp);
+                for (ConsumerRecord<String, String> record : tpRecords) {
+                    System.out.println("topic is " + record.topic() + ", partition is " +
+                            record.partition() + ", offset is " + record.offset() +
+                            ", time is " + new Timestamp(record.timestamp()));
 
-                System.out.println("key is " + record.key() + ", value is " + record.value());
-                //todo
-                Thread.sleep(500);
+                    System.out.println("key is " + record.key() + ", value is " + record.value());
+                    //todo
+                    Thread.sleep(500);
+                }
+                long lastConsumeOffset = tpRecords.get(tpRecords.size() - 1).offset();
+                synchronized (offsets) {
+                    if (!offsets.containsKey(tp)) {
+                        offsets.put(tp, new OffsetAndMetadata(lastConsumeOffset + 1));
+                    } else {
+                        long position = offsets.get(tp).offset();
+                        if (position < lastConsumeOffset + 1) {
+                            offsets.put(tp, new OffsetAndMetadata(lastConsumeOffset + 1));
+                        }
+                    }
+                }
             }
+
             System.out.println("this time fetch record: " + records.count());
-            System.out.println("thread name : " + Thread.currentThread().getName()+
-                    " thread id : "+ Thread.currentThread().getId());
+            System.out.println("thread name : " + Thread.currentThread().getName() +
+                    " thread id : " + Thread.currentThread().getId());
         }
     }
 
