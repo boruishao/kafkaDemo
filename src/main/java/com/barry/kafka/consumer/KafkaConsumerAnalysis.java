@@ -223,6 +223,8 @@ public class KafkaConsumerAnalysis {
                     Thread.sleep(500);
                 }
                 System.out.println("this time fetch record: " + records.count());
+                System.out.println("thread name : " + Thread.currentThread().getName()+
+                        " thread id : "+ Thread.currentThread().getId());
             }
         } catch (Exception e) {
             e.printStackTrace();
