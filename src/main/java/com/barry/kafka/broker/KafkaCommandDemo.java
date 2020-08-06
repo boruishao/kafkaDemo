@@ -10,15 +10,13 @@ import org.apache.kafka.common.config.TopicConfig;
  * Describe TODO
  **/
 
-public class KafkaAdminDemo {
-    public static final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
+public class KafkaCommandDemo {
     public static final String zookeeperList = "localhost:2181";
 
     public static void main(String[] args) {
         String topicName = "topic-create-api";
-//        createTopic(topicName);
-//        showTopics();
-        System.out.println(5%4);
+        createTopic(topicName);
+        showTopics();
     }
 
     public static void createTopic(String topicName) {

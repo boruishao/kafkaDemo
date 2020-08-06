@@ -1,6 +1,7 @@
 package com.barry.kafka.producer;
 
 import com.barry.kafka.bean.Company;
+import com.barry.kafka.broker.KafkaAdminClientDemo;
 import com.barry.kafka.interceptor.ProducerPrefixInterceptor;
 import com.barry.kafka.interceptor.ProducerPrefixInterceptor2;
 import com.barry.kafka.partitioner.DemoPartitioner;
@@ -39,7 +40,6 @@ public class KafkaProducerAnalysis {
     }
 
     public static void main(String[] args) throws Exception {
-
         while (true) {
             Thread.sleep(1000);
             commonStringSend();
