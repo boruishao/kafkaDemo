@@ -27,10 +27,10 @@ public class KafkaAdminClientDemo {
         KafkaAdminClientDemo admin = new KafkaAdminClientDemo();
 //        admin.adminCreateTopic();
 //        admin.adminDeleteTopic();
-//        admin.adminListTopic();
+        admin.adminListTopic();
 //        admin.adminAlterTopicConfig();
 //        admin.adminDescTopicConfig();
-        admin.adminAddPartitions();
+//        admin.adminAddPartitions();
     }
 
     public void adminListTopic() {
