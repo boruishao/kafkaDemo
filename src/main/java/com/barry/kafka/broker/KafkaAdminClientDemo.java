@@ -1,17 +1,14 @@
 package com.barry.kafka.broker;
 
-import com.sun.org.apache.xpath.internal.axes.PredicatedNodeTest;
-import kafka.controller.NewPartition;
 import org.apache.kafka.clients.admin.*;
-import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.config.TopicConfig;
-import org.apache.kafka.common.internals.Topic;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author borui.shao@earlydata.com
@@ -30,9 +27,10 @@ public class KafkaAdminClientDemo {
         KafkaAdminClientDemo admin = new KafkaAdminClientDemo();
 //        admin.adminCreateTopic();
 //        admin.adminDeleteTopic();
-        admin.adminListTopic();
+//        admin.adminListTopic();
 //        admin.adminAlterTopicConfig();
-//        admin.adminDescTopic();
+//        admin.adminDescTopicConfig();
+        admin.adminAddPartitions();
     }
 
     public void adminListTopic() {
@@ -56,10 +54,10 @@ public class KafkaAdminClientDemo {
         closeClient(client);
     }
 
-    public void adminDescTopic() {
+    public void adminDescTopicConfig() {
         Properties prop = initConf();
         AdminClient client = createAdminClient(prop);
-        descTopic(client, topicName);
+        descTopicConfig(client, topicName);
         closeClient(client);
     }
 
@@ -69,6 +67,22 @@ public class KafkaAdminClientDemo {
         HashMap<String, String> configMap = new HashMap<>();
         configMap.put(TopicConfig.UNCLEAN_LEADER_ELECTION_ENABLE_CONFIG, "true");
         alterTopicConfig(client, topicName, configMap);
+        closeClient(client);
+    }
+
+    public void adminAddPartitions() {
+        Properties prop = initConf();
+        AdminClient client = createAdminClient(prop);
+
+        TopicDescription partitions = descTopicPartitions(client, topicName);
+        int size = partitions.partitions().size();
+        int increaseSize = 1;
+        System.out.println("current has partitions: " + size);
+        System.out.println("now increase partition: " + increaseSize);
+        increasePartition(client, size + increaseSize);
+        TopicDescription newPartitions = descTopicPartitions(client, topicName);
+        int newSize = newPartitions.partitions().size();
+        System.out.println("after increase has partitions: " + newSize);
         closeClient(client);
     }
 
@@ -154,17 +168,23 @@ public class KafkaAdminClientDemo {
      * @param client
      * @param topicName
      */
-    private void descTopic(AdminClient client, String topicName) {
+    private void descTopicConfig(AdminClient client, String topicName) {
         ConfigResource resource = new ConfigResource(ConfigResource.Type.TOPIC, topicName);
         DescribeConfigsResult result = client.describeConfigs(Collections.singleton(resource));
         try {
-            Map<ConfigResource, Config> config = result.all().get();
-            System.out.println(config);
+            Map<ConfigResource, Config> configs = result.all().get();
+            System.out.println(configs);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * 修改topic的配置参数，有两套方法，推荐使用最新的 kafka2.3以后支持的。老方法有问题，还需慎重
+     * @param client
+     * @param topicName
+     * @param configMap
+     */
     private void alterTopicConfig(AdminClient client, String topicName, Map<String, String> configMap) {
         ConfigResource resource = new ConfigResource(ConfigResource.Type.TOPIC, topicName);
 
@@ -190,6 +210,28 @@ public class KafkaAdminClientDemo {
         }
     }
 
+    /**
+     *
+     * @param client
+     * @param topicName
+     * @return 分区相关的描述信息
+     */
+    private TopicDescription descTopicPartitions(AdminClient client, String topicName) {
+        TopicDescription description = null;
+        try {
+            description = client.describeTopics(Arrays.asList(topicName)).all().get(10, TimeUnit.SECONDS).get(topicName);
+            System.out.println(description);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            e.printStackTrace();
+        }
+        return description;
+    }
+
+    /**
+     * 增加分区数
+     * @param client
+     * @param increaseTo 分区数增加至多少，不能少于当前的分区数
+     */
     private void increasePartition(AdminClient client, Integer increaseTo) {
         NewPartitions newPartitions = NewPartitions.increaseTo(increaseTo);
         CreatePartitionsResult result = client.createPartitions(Collections.singletonMap(topicName, newPartitions));
