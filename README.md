@@ -8,5 +8,12 @@
 * 指定offset
 * 重平衡器
 * 拦截器
+* 多线程实现消费者的两种方式
 ### 生产者
+* 发送数据 同步和异步
+* 序列化器
+* 拦截器
+* 分区器
 ### 集群管理
+* 通过KafkaCommand使用命令的形式操作topic
+* 通过KafkaAdminClient使用api对topic进行CRUD
