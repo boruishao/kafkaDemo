@@ -76,7 +76,7 @@ public class KafkaAdminClientDemo {
 
         TopicDescription partitions = descTopicPartitions(client, topicName);
         int size = partitions.partitions().size();
-        int increaseSize = 1;
+        int increaseSize = 2;
         System.out.println("current has partitions: " + size);
         System.out.println("now increase partition: " + increaseSize);
         increasePartition(client, size + increaseSize);
@@ -106,14 +106,14 @@ public class KafkaAdminClientDemo {
 
     private void createTopic(AdminClient client, String topicName) {
         /******************case 1 sample create topic *****************************************/
-//        NewTopic newTopic = new NewTopic(topicName, 4, (short) 2);
+        NewTopic newTopic = new NewTopic(topicName, 5, (short) 1);
         /******************case 2 specify some configs*****************************************/
-        Map<Integer, List<Integer>> replicasAssignments = new HashMap<>();
-        replicasAssignments.put(0, Arrays.asList(0, 1));
-        replicasAssignments.put(1, Arrays.asList(1, 2));
-        replicasAssignments.put(2, Arrays.asList(2, 0));
-        replicasAssignments.put(3, Arrays.asList(0, 1));
-        NewTopic newTopic = new NewTopic(topicName, replicasAssignments);
+//        Map<Integer, List<Integer>> replicasAssignments = new HashMap<>();
+//        replicasAssignments.put(0, Arrays.asList(0, 1));
+//        replicasAssignments.put(1, Arrays.asList(1, 2));
+//        replicasAssignments.put(2, Arrays.asList(2, 0));
+//        replicasAssignments.put(3, Arrays.asList(0, 1));
+//        NewTopic newTopic = new NewTopic(topicName, replicasAssignments);
 
         Map<String, String> configs = new HashMap<>();
         configs.put(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT);
