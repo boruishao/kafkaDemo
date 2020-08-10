@@ -17,3 +17,4 @@
 ### 集群管理
 * 通过KafkaCommand使用命令的形式操作topic
 * 通过KafkaAdminClient使用api对topic进行CRUD
+* 定制topic创建协议

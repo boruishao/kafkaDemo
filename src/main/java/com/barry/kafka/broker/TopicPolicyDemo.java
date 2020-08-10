@@ -1,6 +1,5 @@
 package com.barry.kafka.broker;
 
-import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.errors.PolicyViolationException;
 import org.apache.kafka.server.policy.CreateTopicPolicy;
 
