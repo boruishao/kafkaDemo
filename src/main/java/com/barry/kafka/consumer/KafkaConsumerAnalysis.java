@@ -2,6 +2,8 @@ package com.barry.kafka.consumer;
 
 import com.barry.kafka.bean.Company;
 import com.barry.kafka.interceptor.ConsumerTtlInterceptor;
+import com.barry.kafka.partitioner.BroadcastAssignor;
+import com.barry.kafka.partitioner.RandomAssignor;
 import com.barry.kafka.serializer.CompanyDeserialier;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.PartitionInfo;
@@ -52,7 +54,7 @@ public class KafkaConsumerAnalysis {
 //        pointOffsetRec(null, null,
 //                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
 //        receiveWithRebalanceListener();
-
+        defineAssignor();
         receWithInterceptor();
     }
 
@@ -101,6 +103,18 @@ public class KafkaConsumerAnalysis {
         }
         consumer.assign(partitions);
         receive(consumer);
+    }
+
+    /**
+     * 自定义分配器，实现消费分区 随机分配
+     */
+    private static void defineAssignor() {
+        Properties properties = initConf();
+        properties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, BroadcastAssignor.class.getName());
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        consumer.subscribe(Arrays.asList(topic));
+        receive(consumer);
+
     }
 
     /**
@@ -200,7 +214,7 @@ public class KafkaConsumerAnalysis {
     /**
      * 带有拦截器的消费者
      */
-    private static void receWithInterceptor(){
+    private static void receWithInterceptor() {
         Properties properties = initConf();
         properties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, ConsumerTtlInterceptor.class.getName());
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
@@ -223,8 +237,8 @@ public class KafkaConsumerAnalysis {
                     Thread.sleep(500);
                 }
                 System.out.println("this time fetch record: " + records.count());
-                System.out.println("thread name : " + Thread.currentThread().getName()+
-                        " thread id : "+ Thread.currentThread().getId());
+                System.out.println("thread name : " + Thread.currentThread().getName() +
+                        " thread id : " + Thread.currentThread().getId());
             }
         } catch (Exception e) {
             e.printStackTrace();

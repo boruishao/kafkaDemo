@@ -11,7 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author boruiShao
  * Date 2020/7/18 4:01 PM
  * Version 1.0
- * Describe 如果key为空则轮询（与默认分区器不同的是轮询会在所有分区里选择，而默认分区器 只在可用分区里选择），
+ * Describe 生产者发送消息分区器
+ *          如果key为空则轮询（与默认分区器不同的是轮询会在所有分区里选择，而默认分区器 只在可用分区里选择），
  *          如果key不为空则取hash值来分区
  **/
 
