@@ -26,7 +26,7 @@ import java.util.concurrent.TimeoutException;
 public class KafkaProducerAnalysis {
 
     public static final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
-    public static final String topic = "PARSE";
+    public static final String topic = TransactionConsumeTransformProduce.sourceTopic;
     public static final String ClientId = "producer.demo";
 
     public static Properties initConf() {
@@ -57,6 +57,7 @@ public class KafkaProducerAnalysis {
         Properties prop = initConf();
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "Hello,Kafka");
+        //设置为-1000 为了测试 消费者拦截器 比当前时间晚1秒中的拒绝接收
         ProducerRecord<String, String> ttlRecord =
                 new ProducerRecord<>(topic, 0, System.currentTimeMillis() - 1000, null, "Hello,ttl Kafka");
 
@@ -72,7 +73,7 @@ public class KafkaProducerAnalysis {
 
         /****************************async*********************************************/
         try {
-              producer.send(record,
+            producer.send(record,
                     (RecordMetadata metadata, Exception e) -> {
                         if (e != null) {
                             e.printStackTrace();
@@ -113,7 +114,8 @@ public class KafkaProducerAnalysis {
         Properties prop = initConf();
         prop.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, DemoPartitioner.class.getName());
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
-        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "Hello,Kafka Partition");
+        ProducerRecord<String, String> record =
+                new ProducerRecord<String, String>(topic, "Hello,Kafka Partition");
 
         try {
             Future<RecordMetadata> future = producer.send(record);
@@ -143,6 +145,20 @@ public class KafkaProducerAnalysis {
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace();
         }
+        producer.close();
+    }
+
+    /**
+     * 幂等
+     */
+    private static void idempotentSend() {
+        Properties prop = initConf();
+        prop.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
+        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "Hello,Kafka");
+        producer.send(record);
+        //发两次一样的消息，会被当成两条消息，幂等起不了作用。
+        producer.send(record);
         producer.close();
     }
 

@@ -4,6 +4,7 @@ import com.barry.kafka.bean.Company;
 import com.barry.kafka.interceptor.ConsumerTtlInterceptor;
 import com.barry.kafka.partitioner.BroadcastAssignor;
 import com.barry.kafka.partitioner.RandomAssignor;
+import com.barry.kafka.producer.TransactionConsumeTransformProduce;
 import com.barry.kafka.serializer.CompanyDeserialier;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.PartitionInfo;
@@ -54,8 +55,9 @@ public class KafkaConsumerAnalysis {
 //        pointOffsetRec(null, null,
 //                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
 //        receiveWithRebalanceListener();
-        defineAssignor();
-        receWithInterceptor();
+//        defineAssignor();
+//        receWithInterceptor();
+        receiveTransaction();
     }
 
     private static void normalRec() {
@@ -220,6 +222,14 @@ public class KafkaConsumerAnalysis {
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
         consumer.subscribe(Arrays.asList(topic));
         receive(consumer);
+    }
+
+    private static void receiveTransaction(){
+        Properties properties = initConf();
+        properties.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG,"read_committed");
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        consumer.subscribe(Arrays.asList(TransactionConsumeTransformProduce.sinkTopic));
+        receiveByPartition(consumer);
     }
 
     /*------------------------------------------------------------*/

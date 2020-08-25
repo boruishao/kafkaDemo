@@ -20,16 +20,16 @@ import java.util.stream.Collectors;
 public class KafkaAdminClientDemo {
 
     private final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
-    private final String topicName = "topic-partitions";
+    private final String topicName = "topic-source";
     private final int timeout = 30000;
 
     public static void main(String[] args) {
         KafkaAdminClientDemo admin = new KafkaAdminClientDemo();
-        admin.adminCreateTopic();
+//        admin.adminCreateTopic();
 //        admin.adminDeleteTopic();
-        admin.adminListTopic();
+//        admin.adminListTopic();
 //        admin.adminAlterTopicConfig();
-//        admin.adminDescTopicConfig();
+        admin.adminDescTopicConfig();
 //        admin.adminAddPartitions();
     }
 
