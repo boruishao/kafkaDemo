@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author boruiShao
@@ -57,7 +58,8 @@ public class KafkaConsumerAnalysis {
 //        receiveWithRebalanceListener();
 //        defineAssignor();
 //        receWithInterceptor();
-        receiveTransaction();
+//        receiveTransaction();
+        showBeginOffset();
     }
 
     private static void normalRec() {
@@ -224,12 +226,24 @@ public class KafkaConsumerAnalysis {
         receive(consumer);
     }
 
-    private static void receiveTransaction(){
+    /**
+     * 通过事务，接收提交事务的消息
+     */
+    private static void receiveTransaction() {
         Properties properties = initConf();
-        properties.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG,"read_committed");
+        properties.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
         consumer.subscribe(Arrays.asList(TransactionConsumeTransformProduce.sinkTopic));
         receiveByPartition(consumer);
+    }
+
+    /**
+     * 展示分区的 logStartOffset
+     */
+    private static void showBeginOffset(){
+        Properties properties = initConf();
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        showBeginOffset(consumer);
     }
 
     /*------------------------------------------------------------*/
@@ -420,5 +434,18 @@ public class KafkaConsumerAnalysis {
         } finally {
             consumer.close();
         }
+    }
+
+    /**
+     * 展示分区的 logStartOffset
+     * @param consumer
+     */
+    private static void showBeginOffset(KafkaConsumer<String, String> consumer) {
+        List<PartitionInfo> partitions = consumer.partitionsFor(topic);
+        List<TopicPartition> tpList = partitions.stream()
+                .map(pInfo -> new TopicPartition(pInfo.topic(), pInfo.partition()))
+                .collect(Collectors.toList());
+        Map<TopicPartition, Long> beginningOffsets = consumer.beginningOffsets(tpList);
+        System.out.println(beginningOffsets);
     }
 }
