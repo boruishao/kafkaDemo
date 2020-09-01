@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class KafkaConsumerAnalysis {
 
     public static final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
-    public static final String topic = "PARSE";
+    public static final String topic = "topic-connect";
     public static final String groupId = "group-demo";
     public static final AtomicBoolean isRunning = new AtomicBoolean(true);
     public static final String clientId = "consumer.client.id.demo";
@@ -44,7 +44,7 @@ public class KafkaConsumerAnalysis {
     }
 
     public static void main(String[] args) {
-//        normalRec();
+        normalRec();
 //        assignPartition();
 //        deserializeRec();
 //        assignCommitted();
@@ -59,7 +59,7 @@ public class KafkaConsumerAnalysis {
 //        defineAssignor();
 //        receWithInterceptor();
 //        receiveTransaction();
-        showBeginOffset();
+//        showBeginOffset();
     }
 
     private static void normalRec() {

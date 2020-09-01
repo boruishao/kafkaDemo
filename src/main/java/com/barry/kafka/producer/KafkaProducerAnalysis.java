@@ -26,7 +26,7 @@ import java.util.concurrent.TimeoutException;
 public class KafkaProducerAnalysis {
 
     public static final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
-    public static final String topic = TransactionConsumeTransformProduce.sourceTopic;
+    public static final String topic = "PARSE";
     public static final String ClientId = "producer.demo";
 
     public static Properties initConf() {
