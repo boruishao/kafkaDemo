@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 
 public class KafkaConsumerAnalysis {
 
-    public static final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
-    public static final String topic = "topic-connect";
+    public static final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
+    public static final String topic = "PARSE";
     public static final String groupId = "group-demo";
     public static final AtomicBoolean isRunning = new AtomicBoolean(true);
     public static final String clientId = "consumer.client.id.demo";

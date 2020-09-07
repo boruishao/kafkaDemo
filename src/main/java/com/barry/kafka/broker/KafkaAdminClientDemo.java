@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 
 public class KafkaAdminClientDemo {
 
-    private final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
-    private final String topicName = "PARSE";
+    private final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
+    private final String topicName = "kafkaStudy";
     private final int timeout = 30000;
 
     public static void main(String[] args) {

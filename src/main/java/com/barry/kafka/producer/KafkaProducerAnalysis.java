@@ -25,9 +25,11 @@ import java.util.concurrent.TimeoutException;
 
 public class KafkaProducerAnalysis {
 
-    public static final String brokerList = "localhost:9092,localhost:9093,localhost:9094";
+    public static final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
     public static final String topic = "PARSE";
     public static final String ClientId = "producer.demo";
+
+    static int i = 0;
 
     public static Properties initConf() {
         Properties properties = new Properties();
@@ -56,7 +58,7 @@ public class KafkaProducerAnalysis {
     private static void commonStringSend() {
         Properties prop = initConf();
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
-        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "Hello,Kafka");
+        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "key", "Hello,Kafka" + i++);
         //设置为-1000 为了测试 消费者拦截器 比当前时间晚1秒中的拒绝接收
         ProducerRecord<String, String> ttlRecord =
                 new ProducerRecord<>(topic, 0, System.currentTimeMillis() - 1000, null, "Hello,ttl Kafka");
