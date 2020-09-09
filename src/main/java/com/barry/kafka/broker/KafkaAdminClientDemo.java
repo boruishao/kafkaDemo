@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
 
 public class KafkaAdminClientDemo {
 
-    private final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
+    private final String brokerList = "b-2.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092,b-1.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092";
+//    private final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
     private final String topicName = "kafkaStudy";
     private final int timeout = 30000;
 

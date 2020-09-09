@@ -22,6 +22,9 @@ import java.util.stream.Collectors;
  * Date 2020/9/3 10:05 AM
  * Version 1.0
  * Describe 手动计算lag
+ * 1.
+ * 2.
+ * 3.
  **/
 
 @Slf4j
@@ -91,7 +94,7 @@ public class KafkaConsumerGroupService {
 
         return tpSet.stream()
                 //排除有消费者成员信息的topic
-                .filter(tp->!assignedTps.contains(tp))
+                .filter(tp -> !assignedTps.contains(tp))
                 .map(tp -> {
                     long logSize = 0;
                     Long endOffset = consumer.endOffsets(Collections.singleton(tp)).get(tp);

@@ -26,6 +26,7 @@ import java.util.concurrent.TimeoutException;
 public class KafkaProducerAnalysis {
 
     public static final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
+//    public static final String brokerList = "b-2.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092,b-1.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092";
     public static final String topic = "PARSE";
     public static final String ClientId = "producer.demo";
 
@@ -43,7 +44,7 @@ public class KafkaProducerAnalysis {
 
     public static void main(String[] args) throws Exception {
         while (true) {
-            Thread.sleep(1000);
+            Thread.sleep(1);
             commonStringSend();
 //            defineSerSend();
 //            definePartitionSend();
@@ -64,14 +65,14 @@ public class KafkaProducerAnalysis {
                 new ProducerRecord<>(topic, 0, System.currentTimeMillis() - 1000, null, "Hello,ttl Kafka");
 
         /****************************sync*********************************************/
-        try {
-            Future<RecordMetadata> future = producer.send(ttlRecord);
-            //设置超时时间
-            RecordMetadata metadata = future.get(1L, TimeUnit.SECONDS);
-            System.out.println("sync : " + metadata.topic() + " - " + metadata.partition() + " - " + metadata.offset());
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Future<RecordMetadata> future = producer.send(ttlRecord);
+//            //设置超时时间
+//            RecordMetadata metadata = future.get(1L, TimeUnit.SECONDS);
+//            System.out.println("sync : " + metadata.topic() + " - " + metadata.partition() + " - " + metadata.offset());
+//        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+//            e.printStackTrace();
+//        }
 
         /****************************async*********************************************/
         try {
