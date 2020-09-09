@@ -1,6 +1,7 @@
 package com.barry.kafka.consumer;
 
 import com.barry.kafka.bean.Company;
+import com.barry.kafka.interceptor.ConsumerHeaderTtlInterceptor;
 import com.barry.kafka.interceptor.ConsumerTtlInterceptor;
 import com.barry.kafka.partitioner.BroadcastAssignor;
 import com.barry.kafka.partitioner.RandomAssignor;
@@ -28,7 +29,6 @@ import java.util.stream.Collectors;
 public class KafkaConsumerAnalysis {
 
     public static final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
-//    public static final String brokerList = "b-2.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092,b-1.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092";
     public static final String topic = "PARSE";
     public static final String groupId = "group-demo";
     public static final AtomicBoolean isRunning = new AtomicBoolean(true);
@@ -45,7 +45,7 @@ public class KafkaConsumerAnalysis {
     }
 
     public static void main(String[] args) {
-        normalRec();
+//        normalRec();
 //        assignPartition();
 //        deserializeRec();
 //        assignCommitted();
@@ -58,7 +58,7 @@ public class KafkaConsumerAnalysis {
 //                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
 //        receiveWithRebalanceListener();
 //        defineAssignor();
-//        receWithInterceptor();
+        receWithInterceptor();
 //        receiveTransaction();
 //        showBeginOffset();
     }
@@ -221,7 +221,10 @@ public class KafkaConsumerAnalysis {
      */
     private static void receWithInterceptor() {
         Properties properties = initConf();
-        properties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, ConsumerTtlInterceptor.class.getName());
+        //通过写死的ttl判断超时
+//        properties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, ConsumerTtlInterceptor.class.getName());
+        //通过header中的ttl动态控制超时
+        properties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, ConsumerHeaderTtlInterceptor.class.getName());
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
         consumer.subscribe(Arrays.asList(topic));
         receive(consumer);
