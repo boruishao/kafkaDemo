@@ -23,3 +23,6 @@
 ### 监控原理
 监控JMX指标
 通过consumer group 求Lag的两种方式
+### spark
+* spark-streaming
+* structure-streaming 一种和spark-sql结合的流处理 since 2.0 version

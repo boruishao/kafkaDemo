@@ -28,8 +28,9 @@ import java.util.stream.Collectors;
 
 public class KafkaConsumerAnalysis {
 
-    public static final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
-    public static final String topic = "PARSE";
+//    public static final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
+    public static final String brokerList = "b-1.testkafka.k99f7c.c2.kafka.cn-north-1.amazonaws.com.cn:9092,b-2.testkafka.k99f7c.c2.kafka.cn-north-1.amazonaws.com.cn:9092";
+    public static final String topic = "ITEMPAGE";
     public static final String groupId = "group-demo";
     public static final AtomicBoolean isRunning = new AtomicBoolean(true);
     public static final String clientId = "consumer.client.id.demo";
@@ -45,7 +46,7 @@ public class KafkaConsumerAnalysis {
     }
 
     public static void main(String[] args) {
-//        normalRec();
+        normalRec();
 //        assignPartition();
 //        deserializeRec();
 //        assignCommitted();
@@ -58,7 +59,7 @@ public class KafkaConsumerAnalysis {
 //                (System.currentTimeMillis() - n * 24 * 3600 * 1000));
 //        receiveWithRebalanceListener();
 //        defineAssignor();
-        receWithInterceptor();
+//        receWithInterceptor();
 //        receiveTransaction();
 //        showBeginOffset();
     }

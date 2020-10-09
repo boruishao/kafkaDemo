@@ -19,19 +19,19 @@ import java.util.stream.Collectors;
 
 public class KafkaAdminClientDemo {
 
-    private final String brokerList = "b-2.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092,b-1.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092";
-//    private final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
-    private final String topicName = "kafkaStudy";
+//    private final String brokerList = "b-1.testkafka.k99f7c.c2.kafka.cn-north-1.amazonaws.com.cn:9092,b-2.testkafka.k99f7c.c2.kafka.cn-north-1.amazonaws.com.cn:9092";
+    private final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
+    private final String topicName = "topic-spark";
     private final int timeout = 30000;
 
     public static void main(String[] args) {
         KafkaAdminClientDemo admin = new KafkaAdminClientDemo();
-        admin.adminCreateTopic();
+//        admin.adminCreateTopic();
 //        admin.adminDeleteTopic();
         admin.adminListTopic();
 //        admin.adminAlterTopicConfig();
-//        admin.adminDescTopicConfig();
 //        admin.adminAddPartitions();
+        admin.adminDescTopicConfig();
     }
 
     public void adminListTopic() {
@@ -107,7 +107,7 @@ public class KafkaAdminClientDemo {
 
     private void createTopic(AdminClient client, String topicName) {
         /******************case 1 sample create topic *****************************************/
-        NewTopic newTopic = new NewTopic(topicName, 5, (short) 2);
+        NewTopic newTopic = new NewTopic(topicName, 3, (short) 3);
         /******************case 2 specify some configs*****************************************/
         Map<Integer, List<Integer>> replicasAssignments = new HashMap<>();
         replicasAssignments.put(0, Arrays.asList(0, 1, 2));

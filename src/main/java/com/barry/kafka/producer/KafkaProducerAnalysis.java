@@ -2,12 +2,14 @@ package com.barry.kafka.producer;
 
 import com.barry.kafka.BytesUtils;
 import com.barry.kafka.bean.Company;
-import com.barry.kafka.broker.KafkaAdminClientDemo;
 import com.barry.kafka.interceptor.ProducerPrefixInterceptor;
 import com.barry.kafka.interceptor.ProducerPrefixInterceptor2;
 import com.barry.kafka.partitioner.DemoPartitioner;
 import com.barry.kafka.serializer.CompanySerializer;
-import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -29,11 +31,12 @@ import java.util.concurrent.TimeoutException;
 public class KafkaProducerAnalysis {
 
     public static final String brokerList = "192.168.3.136:9092,192.168.3.136:9093,192.168.3.136:9094";
-    //    public static final String brokerList = "b-2.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092,b-1.vpntest.i70fsp.c2.kafka.cn-north-1.amazonaws.com.cn:9092";
-    public static final String topic = "PARSE";
+    public static final String topic = "ITEMPAGE";
     public static final String ClientId = "producer.demo";
 
     static int i = 0;
+
+    public static final String key = "US_TARGET_215_64D949DC665E8856A75A39CC69FA97DC_C6453BDFCAFB7169582707E09DED114C_20190812_MINTEL_20190813173005";
 
     public static Properties initConf() {
         Properties properties = new Properties();
@@ -47,12 +50,13 @@ public class KafkaProducerAnalysis {
 
     public static void main(String[] args) throws Exception {
         while (true) {
-            Thread.sleep(2000);
+            Thread.sleep(3000);
 //            commonStringSend();
 //            defineSerSend();
 //            definePartitionSend();
 //        defineInterceptorSend();
-            ttlSend();
+//            ttlSend();
+            streamingSend();
         }
 
     }
@@ -63,7 +67,7 @@ public class KafkaProducerAnalysis {
     private static void commonStringSend() {
         Properties prop = initConf();
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
-        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, "key", "Hello,Kafka" + i++);
+        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, "Hello,Kafka" + i++);
         //设置为-1000 为了测试 消费者拦截器 比当前时间晚1秒中的拒绝接收
         ProducerRecord<String, String> ttlRecord =
                 new ProducerRecord<>(topic, 0, System.currentTimeMillis() - 1000, null, "Hello,ttl Kafka");
@@ -176,11 +180,11 @@ public class KafkaProducerAnalysis {
         Properties prop = initConf();
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
         ProducerRecord<String, String> record1 = new ProducerRecord<>(topic, 3, System.currentTimeMillis(),
-                null, "msg_ttl_1", new RecordHeaders().add(new RecordHeader("ttl", BytesUtils.long2Bytes(10))));
-        ProducerRecord<String, String> record2 = new ProducerRecord<>(topic, 4, System.currentTimeMillis() - 5 * 1000,
-                null, "msg_ttl_2", new RecordHeaders().add(new RecordHeader("ttl", BytesUtils.long2Bytes(5))));
-        ProducerRecord<String, String> record3 = new ProducerRecord<>(topic, 5, System.currentTimeMillis(),
-                null, "msg_ttl_3", new RecordHeaders().add(new RecordHeader("ttl", BytesUtils.long2Bytes(20))));
+                key, "msg_ttl_1", new RecordHeaders().add(new RecordHeader("ttl", BytesUtils.long2Bytes(10))));
+        ProducerRecord<String, String> record2 = new ProducerRecord<>(topic, 2, System.currentTimeMillis() - 5 * 1000,
+                key, "msg_ttl_2", new RecordHeaders().add(new RecordHeader("ttl", BytesUtils.long2Bytes(5))));
+        ProducerRecord<String, String> record3 = new ProducerRecord<>(topic, 1, System.currentTimeMillis(),
+                key, "msg_ttl_3", new RecordHeaders().add(new RecordHeader("ttl", BytesUtils.long2Bytes(20))));
 
 
         RecordMetadata meta1 = producer.send(record1).get();
@@ -192,6 +196,30 @@ public class KafkaProducerAnalysis {
         RecordMetadata meta3 = producer.send(record3).get();
         System.out.println(meta3.topic() + " - " + meta3.partition() + " - " + meta3.offset());
 
+    }
+
+    private static void streamingSend() {
+        Properties prop = initConf();
+        String topic = "topic-spark";
+        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(prop);
+        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic,  "" + i++);
+        try {
+            producer.send(record,
+                    (RecordMetadata metadata, Exception e) -> {
+                        if (e != null) {
+                            e.printStackTrace();
+                        } else {
+                            System.out.println("Async : " + metadata.topic() + " - " +
+                                    metadata.partition() + " - " + metadata.offset() + "=" + i);
+
+                        }
+                    }
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        producer.close(Duration.ofSeconds(1, 100));
     }
 
 

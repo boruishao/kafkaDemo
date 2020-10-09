@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration>
+
+    <appender name="logFileAppender" class="org.apache.log4j.RollingFileAppender">
+        <param name="File"  value="logs/app-backup.log"/>
+        <param name="MaxFileSize" value="100MB"/>
+        <param name="MaxBackupIndex" value="100"/>
+        <param name="Encoding" value="UTF-8"/>
+        <layout class="org.apache.log4j.EnhancedPatternLayout">
+            <param name="ConversionPattern" value="%d{ISO8601} [%-5p][%-16.16t][%40.40c] - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="consoleAppender" class="org.apache.log4j.ConsoleAppender">
+        <param name="Encoding" value="UTF-8"/>
+        <layout class="org.apache.log4j.EnhancedPatternLayout">
+            <param name="ConversionPattern" value="%d{ISO8601} [%-5p][%-25.25l][%10.10c] - %m%n"/>
+        </layout>
+    </appender>
+
+    <root>
+        <level value="error" ></level>
+        <appender-ref ref="logFileAppender"/>
+        <appender-ref ref="consoleAppender"/>
+    </root>
+</log4j:configuration>
