@@ -16,7 +16,7 @@ pipeline {
 
         stage('test2') {
           steps {
-            sh 'git pull'
+            sh 'echo \'test2\''
           }
         }
 
