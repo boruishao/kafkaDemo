@@ -20,8 +20,8 @@ pipeline {
 
     stage('package') {
       agent {
-        docker {
-          image 'dockette/mvn'
+        dockerfile {
+          filename 'Dockerfile'
         }
 
       }
