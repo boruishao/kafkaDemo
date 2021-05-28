@@ -1,10 +1,5 @@
 pipeline {
-  agent {
-    docker {
-      image 'centos'
-    }
-
-  }
+  agent none
   stages {
     stage('test') {
       parallel {
@@ -24,6 +19,12 @@ pipeline {
     }
 
     stage('package') {
+      agent {
+        docker {
+          image 'centos'
+        }
+
+      }
       steps {
         sleep 2
         sh 'mvn package'
