@@ -21,7 +21,7 @@ pipeline {
     stage('package') {
       agent {
         docker {
-          image 'centos'
+          image 'dockette/mvn'
         }
 
       }
