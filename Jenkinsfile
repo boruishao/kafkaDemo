@@ -26,6 +26,7 @@ pipeline {
     stage('package') {
       steps {
         sleep 2
+        sh 'mvn package'
       }
     }
 
