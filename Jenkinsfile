@@ -10,6 +10,12 @@ pipeline {
         }
 
         stage('test2') {
+          agent {
+            dockerfile {
+              filename 'Dockerfile'
+            }
+
+          }
           steps {
             sh 'echo \'test2\''
           }
